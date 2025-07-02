@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI赋能·饮品APP会员中心</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- 全局与基础样式 (v2.0 UI微调) --- */
+        :root {
+            --brand-primary: #007A5A; /* 深绿色，品质感 */
+            --brand-secondary: #FFC72C; /* 黄色，活力 */
+            --bg-color: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --text-primary: #212529;
+            --text-secondary: #6C757D;
+            --text-light: #FFFFFF;
+            --border-color: #E9ECEF;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08); /* 阴影更柔和 */
+            --radius: 20px; /* 圆角更突出 */
+        }
+        html { scroll-behavior: smooth; }
+        body { margin: 0; font-family: 'Noto Sans SC', sans-serif; background-color: #222; display: flex; justify-content: center; align-items: flex-start; padding-top: 30px; }
+        .app-container { width: 100%; max-width: 414px; min-height: 800px; background-color: var(--bg-color); position: relative; overflow: hidden; display: flex; flex-direction: column; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .status-bar { height: 44px; background-color: transparent; position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 35px; font-size: 14px; font-weight: 500; color: var(--text-primary); z-index: 10; }
+        .main-content { flex-grow: 1; overflow-y: auto; padding-bottom: 80px; }
+        .page { display: none; animation: fadeIn 0.5s ease-in-out; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- 1. 登录选择界面 (UI微调) --- */
+        #login-page { padding: 80px 25px 30px; text-align: center; }
+        #login-page .logo { color: var(--brand-primary); font-size: 36px; font-weight: 700; margin-bottom: 15px; }
+        #login-page .slogan { font-size: 18px; color: var(--text-secondary); margin-bottom: 50px; }
+        .persona-card { background: var(--card-bg); padding: 25px; border-radius: var(--radius); margin-bottom: 25px; box-shadow: var(--shadow); border-left: 6px solid; text-align: left; transition: transform 0.3s, box-shadow 0.3s; }
+        .persona-card:hover { transform: translateY(-5px); box-shadow: 0 12px 35px rgba(0,0,0,0.1); }
+        .persona-card .tags { margin-bottom: 15px; }
+        .persona-card .tag { display: inline-block; background-color: var(--bg-color); color: var(--text-secondary); padding: 4px 10px; border-radius: 20px; font-size: 12px; margin-right: 5px; }
+        .persona-card h3 { margin: 0 0 10px; font-size: 22px; color: var(--text-primary); }
+        .persona-card p { margin: 0 0 20px; color: var(--text-secondary); line-height: 1.6; }
+        .persona-card .login-btn { display: block; width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; color: var(--text-light); cursor: pointer; transition: transform 0.2s, background-color 0.3s; }
+        .persona-card .login-btn:hover { transform: scale(1.02); }
+        .persona-card.quality { border-color: var(--brand-primary); }
+        .persona-card.quality .login-btn { background: var(--brand-primary); }
+        .persona-card.savvy { border-color: var(--brand-secondary); }
+        .persona-card.savvy .login-btn { background: var(--brand-secondary); color: var(--text-primary); }
+
+        /* --- 2. 会员中心主界面 (UI微调) --- */
+        .header-greeting { padding: 64px 25px 20px; }
+        .header-greeting p { margin: 0; color: var(--text-secondary); font-size: 16px; }
+        .header-greeting h2 { margin: 5px 0 0; font-size: 28px; color: var(--text-primary); }
+        .section-title { padding: 0 25px; margin: 30px 0 20px; font-size: 20px; font-weight: 700; color: var(--text-primary); }
+
+        /* 视图A: 品质初探者·凌悦 (UI微调) */
+        #mc-quality .hero-banner { height: 250px; margin: 0 25px; border-radius: var(--radius); background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(https://images.pexels.com/photos/2159065/pexels-photo-2159065.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2) center/cover; display: flex; flex-direction: column; justify-content: flex-end; padding: 25px; color: var(--text-light); box-shadow: var(--shadow); }
+        #mc-quality .hero-banner h3 { margin: 0 0 5px; font-size: 24px; }
+        #mc-quality .hero-banner p { margin: 0; opacity: 0.9; }
+        .horizontal-scroll { display: flex; overflow-x: auto; padding: 0 25px 20px; scroll-snap-type: x mandatory; gap: 15px; }
+        .horizontal-scroll::-webkit-scrollbar { display: none; }
+        .recommend-card { flex: 0 0 180px; background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; scroll-snap-align: start; }
+        .recommend-card img { width: 100%; height: 120px; object-fit: cover; }
+        .recommend-card .info { padding: 15px; }
+        .recommend-card h4 { margin: 0 0 5px; font-size: 16px; }
+        .recommend-card p { margin: 0; font-size: 12px; color: var(--text-secondary); }
+        .gift-card { margin: 0 25px; padding: 25px; border-radius: var(--radius); background: linear-gradient(135deg, var(--brand-primary), #004d38); color: var(--text-light); display: flex; align-items: center; justify-content: space-between; }
+        .gift-card .icon { font-size: 40px; }
+        .gift-card h4 { margin: 0 0 5px; font-size: 18px; }
+        .gift-card p { margin: 0; opacity: 0.9; font-size: 14px; }
+
+        /* 视图B: 资深玩家·阿泽 (新增与修复) */
+        #mc-savvy .wallet-card { margin: 0 25px; background: linear-gradient(135deg, #FFC72C, #FFAA00); border-radius: var(--radius); padding: 25px; box-shadow: var(--shadow); color: var(--text-primary); }
+        .wallet-card .stats { display: flex; text-align: center; justify-content: space-around; }
+        .wallet-card .stat h3 { margin: 0 0 5px; font-size: 24px; font-weight: 700; }
+        .wallet-card .stat p { margin: 0; font-size: 12px; opacity: 0.8; }
+        .wallet-card .actions { display: flex; gap: 10px; margin-top: 20px; }
+        .wallet-card .action-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; }
+        .wallet-card .action-btn.primary { background: var(--text-primary); color: var(--text-light); }
+        
+        /* 新增: 会员等级卡片 */
+        .membership-level-card { margin: 0 25px; padding: 20px; background-color: #333; color: white; border-radius: var(--radius); }
+        .membership-level-card .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;}
+        .membership-level-card h4 { margin: 0; font-size: 18px; }
+        .membership-level-card .level-name { background-color: var(--brand-secondary); color: black; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+        .membership-level-card .progress-bar { width: 100%; height: 6px; background-color: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
+        .membership-level-card .progress { width: 60%; height: 100%; background-color: var(--brand-secondary); }
+        .membership-level-card .progress-text { font-size: 12px; margin-top: 8px; color: rgba(255,255,255,0.7); }
+        
+        /* 修复与优化: 积分兑换 */
+        .redemption-item { display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 15px; }
+        .redemption-item img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; }
+        .redemption-item .info { flex-grow: 1; }
+        .redemption-item h4 { margin: 0 0 5px; font-size: 16px; }
+        .redemption-item .price { font-size: 14px; color: var(--text-secondary); }
+        .redemption-item .price span { color: var(--brand-primary); font-weight: 700; }
+        
+        /* 新增: 任务中心 */
+        .task-item { display: flex; align-items: center; gap: 15px; margin: 0 25px 15px; padding: 20px; background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); }
+        .task-item .icon { font-size: 24px; }
+        .task-item .info { flex-grow: 1; }
+        .task-item h4 { margin: 0 0 5px; font-size: 16px; }
+        .task-item p { margin: 0; color: var(--text-secondary); font-size: 12px; }
+        .task-item .task-btn { background: var(--brand-primary); color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 500; }
+
+        /* --- 3. 底部导航栏 (v2.0 全新设计) --- */
+        .bottom-nav-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 75px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
+        .nav-item { cursor: pointer; text-align: center; color: var(--text-secondary); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: color 0.3s; }
+        .nav-item svg { width: 28px; height: 28px; margin-bottom: 4px; transition: transform 0.3s; }
+        .nav-item div { font-size: 11px; font-weight: 500; }
+        .nav-item.active { color: var(--brand-primary); }
+        .nav-item.active svg { transform: scale(1.1); }
+
+        /* --- 4. AI智能客服 (v2.0 新增头像) --- */
+        .fab-ai { position: absolute; bottom: 95px; right: 25px; width: 60px; height: 60px; background: linear-gradient(135deg, var(--brand-primary), #00b386); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(0, 122, 90, 0.4); z-index: 101; cursor: pointer; transition: transform 0.3s; }
+        .chatbot-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 200; display: none; justify-content: center; align-items: flex-end; opacity: 0; transition: opacity 0.3s; }
+        .chatbot-container.visible { display: flex; opacity: 1; }
+        .chat-window { width: 100%; height: 85%; background: var(--bg-color); border-radius: var(--radius) var(--radius) 0 0; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+        .chatbot-container.visible .chat-window { transform: translateY(0); }
+        .chat-header { padding: 15px 20px; text-align: center; border-bottom: 1px solid var(--border-color); position: relative; }
+        .chat-header h3 { margin: 0; font-size: 16px; }
+        .chat-close { position: absolute; right: 20px; top: 15px; cursor: pointer; font-size: 20px; color: var(--text-secondary); }
+        
+        /* 对话行与头像样式 */
+        .chat-messages { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        .message-row { display: flex; align-items: flex-end; gap: 10px; animation: popIn 0.3s ease-out; }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .message-row.user { justify-content: flex-end; }
+        .message-row .avatar { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background-color: var(--border-color); }
+        .message-row .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .message-row .message-bubble { max-width: 70%; padding: 12px 18px; border-radius: 18px; line-height: 1.6; font-size: 15px; }
+        .bot .message-bubble { background: var(--card-bg); border-bottom-left-radius: 4px; color: var(--text-primary); }
+        .user .message-bubble { background: var(--brand-primary); color: white; border-bottom-right-radius: 4px; }
+        
+        .chat-input-form { display: flex; padding: 15px; background: var(--card-bg); border-top: 1px solid var(--border-color); }
+        .chat-input { flex-grow: 1; border: none; background: var(--bg-color); border-radius: 20px; padding: 12px 18px; font-size: 15px; outline: none; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="status-bar">
+            <span class="time">9:41 AM</span>
+        </header>
+
+        <main class="main-content">
+            <!-- ===== 1. 登录选择界面 ===== -->
+            <div id="login-page" class="page active">
+                <div class="logo">SipAI</div>
+                <p class="slogan">每一次打开，都是为你定制的开始</p>
+                
+                <div class="persona-card quality" onclick="loginAs('quality')">
+                    <h3>品质初探者 · 凌悦</h3>
+                    <div class="tags"><span class="tag">新用户</span><span class="tag">北京</span><span class="tag">冬季</span><span class="tag">品质至上</span></div>
+                    <p>我是凌悦，第一次使用APP。我相信，一杯好饮品，源自好原料和好工艺。</p>
+                    <button class="login-btn">登录，开启我的品质之旅</button>
+                </div>
+
+                <div class="persona-card savvy" onclick="loginAs('savvy')">
+                    <h3>资深玩家 · 阿泽</h3>
+                    <div class="tags"><span class="tag">老用户</span><span class="tag">广州</span><span class="tag">夏季</span><span class="tag">价格敏感</span></div>
+                    <p>我是阿泽，你们的老朋友了。怎么买最划算，我了如指掌。</p>
+                    <button class="login-btn">登录，查看我的专属权益</button>
+                </div>
+            </div>
+
+            <!-- ===== 2. 会员中心主界面 (动态生成) ===== -->
+            <div id="mc-page" class="page">
+                <div class="header-greeting">
+                    <p id="greeting-subtext"></p>
+                    <h2 id="greeting-maintext"></h2>
+                </div>
+                
+                <!-- 视图A: 品质初探者 -->
+                <div id="mc-quality">
+                    <div class="hero-banner">
+                        <h3>寻豆之旅 · 埃塞俄比亚</h3>
+                        <p>探索瑰夏的诞生之地</p>
+                    </div>
+                    <h3 class="section-title">匠心甄选</h3>
+                    <div class="horizontal-scroll">
+                        <div class="recommend-card"><img src="https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=800" alt=""><div class="info"><h4>手冲·瑰夏</h4><p>柑橘与茉莉花香</p></div></div>
+                        <div class="recommend-card"><img src="https://images.pexels.com/photos/1194389/pexels-photo-1194389.jpeg?auto=compress&cs=tinysrgb&w=800" alt=""><div class="info"><h4>特调·白露</h4><p>白茶与桂花米酿</p></div></div>
+                        <div class="recommend-card"><img src="https://images.pexels.com/photos/1417945/pexels-photo-1417945.jpeg?auto=compress&cs=tinysrgb&w=800" alt=""><div class="info"><h4>暖冬热巧</h4><p>法芙娜70%黑巧</p></div></div>
+                    </div>
+                     <h3 class="section-title">您的首购赏味礼</h3>
+                    <div class="gift-card">
+                        <div>
+                            <h4>免费赠送·巴斯克蛋糕</h4>
+                            <p>随任意饮品赠送，品味醇厚</p>
+                        </div>
+                        <div class="icon">🎁</div>
+                    </div>
+                </div>
+
+                <!-- 视图B: 资深玩家 -->
+                <div id="mc-savvy">
+                    <div class="wallet-card">
+                         <div class="stats">
+                            <div class="stat"><h3>12,860</h3><p>可用积分</p></div>
+                            <div class="stat"><h3>¥35.5</h3><p>账户余额</p></div>
+                            <div class="stat"><h3>6</h3><p>优惠券</p></div>
+                        </div>
+                        <div class="actions">
+                            <button class="action-btn">去兑换</button>
+                            <button class="action-btn primary">去充值</button>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">我的会员等级</h3>
+                    <div class="membership-level-card">
+                        <div class="top">
+                            <h4>金牌玩家</h4>
+                            <span class="level-name">Lv. 4</span>
+                        </div>
+                        <div class="progress-bar"><div class="progress"></div></div>
+                        <p class="progress-text">再积攒1200成长值即可升级为钻石玩家</p>
+                    </div>
+                    
+                    <h3 class="section-title">积分当钱花</h3>
+                    <div style="padding: 0 25px;">
+                        <div class="redemption-item">
+                            <img src="https://images.pexels.com/photos/2456435/pexels-photo-2456435.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Iced Latte">
+                            <div class="info">
+                                <h4>经典冰拿铁</h4>
+                                <p class="price"><span>3000</span> 积分 + <span>¥8</span></p>
+                            </div>
+                        </div>
+                         <div class="redemption-item">
+                            <!-- ******************** 图片修复点 ******************** -->
+                            <img src="https://images.pexels.com/photos/8594248/pexels-photo-8594248.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Fruit Tea">
+                            <div class="info">
+                                <h4>满杯百香果</h4>
+                                <p class="price"><span>2500</span> 积分 + <span>¥6</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">任务中心</h3>
+                    <div class="task-item">
+                        <div class="icon">📅</div>
+                        <div class="info">
+                            <h4>连续签到</h4>
+                            <p>今日签到可得10积分</p>
+                        </div>
+                        <button class="task-btn">去签到</button>
+                    </div>
+                    <div class="task-item">
+                        <div class="icon">✨</div>
+                        <div class="info">
+                            <h4>购买任意新品</h4>
+                            <p>可获得双倍积分奖励</p>
+                        </div>
+                        <button class="task-btn">去选购</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- ===== 3. 底部导航栏 ===== -->
+        <nav class="bottom-nav-bar" style="display: none;">
+            <div class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l-2 0l9 -9l9 9l-2 0" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" /><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" /></svg>
+                <div>首页</div>
+            </div>
+            <div class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 14c.83 .642 2.077 1.017 3.5 1c1.423 -.017 2.67 -.358 3.5 -1c.83 .642 2.077 1.017 3.5 1c1.423 -.017 2.67 -.358 3.5 -1" /><path d="M8 3a2.4 2.4 0 0 0 -1 2a2.4 2.4 0 0 0 1 2" /><path d="M12 3a2.4 2.4 0 0 0 -1 2a2.4 2.4 0 0 0 1 2" /><path d="M3 10h14v5a6 6 0 0 1 -6 6h-2a6 6 0 0 1 -6 -6v-5z" /><path d="M16.746 16.726a3 3 0 1 0 .252 -5.555" /></svg>
+                <div>点单</div>
+            </div>
+            <div class="nav-item active">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" /></svg>
+                <div>会员</div>
+            </div>
+            <div class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg>
+                <div>我的</div>
+            </div>
+        </nav>
+
+        <!-- ===== 4. AI智能客服 ===== -->
+        <div class="fab-ai" style="display: none;" onclick="openChatbot()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" viewBox="0 0 16 16"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5M3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.6 26.6 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.93.93 0 0 1-.765.935c-.845.147-2.34.346-4.235.346s-3.39-.2-4.235-.346A.93.93 0 0 1 3 9.219zm4.542-.827a.25.25 0 0 0 .217.066l.02.002a.25.25 0 0 0 .217-.066l.02-.002a.25.25 0 0 0 .066-.217l-.002-.02a.25.25 0 0 0-.066-.217l-.002-.02a.25.25 0 0 0-.217.066l-.02.002a.25.25 0 0 0-.217.066l-.02.002a.25.25 0 0 0-.066.217l.002.02a.25.25 0 0 0 .066.217l.002.02Z"/><path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1M1 4h14v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z"/></svg>
+        </div>
+        <div class="chatbot-container">
+            <div class="chat-window">
+                <div class="chat-header">
+                    <h3 id="chatbot-title">SipAI 智能客服</h3>
+                    <span class="chat-close" onclick="closeChatbot()">×</span>
+                </div>
+                <div class="chat-messages" id="chat-messages"></div>
+                <form class="chat-input-form" id="chat-form">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="与您的专属顾问对话..." autocomplete="off">
+                    <button type="submit" style="display:none;"></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const loginPage = document.getElementById('login-page');
+    const mcPage = document.getElementById('mc-page');
+    const bottomNav = document.querySelector('.bottom-nav-bar');
+    const fab = document.querySelector('.fab-ai');
+    
+    // AI Chatbot elements
+    const chatbotContainer = document.querySelector('.chatbot-container');
+    const chatbotTitle = document.getElementById('chatbot-title');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    let currentUser = null;
+
+    const users = {
+        quality: {
+            name: '凌悦',
+            greetingSub: '早上好, 凌悦！',
+            greetingMain: '今日北京-2°C ❄️，来杯热饮温暖一下吧。',
+            view: document.getElementById('mc-quality'),
+            chatbotName: '您的专属饮品顾问',
+            chatbotGreeting: '您好，我是您的专属饮品顾问。想了解【瑰夏手冲】的风味特点吗？'
+        },
+        savvy: {
+            name: '阿泽',
+            greetingSub: '晚上好, 阿泽！',
+            greetingMain: '广州今夜闷热 🌙，来杯冰饮降降温？',
+            view: document.getElementById('mc-savvy'),
+            chatbotName: '您的省钱小助手',
+            chatbotGreeting: 'Hi阿泽，我是您的省钱小助手！您有12860积分，可以兑换2杯大杯拿铁了，现在要兑换吗？'
+        }
+    };
+
+    function loginAs(userType) {
+        currentUser = users[userType];
+        
+        loginPage.classList.remove('active');
+        mcPage.classList.add('active');
+        bottomNav.style.display = 'flex';
+        fab.style.display = 'flex';
+
+        // 动态设置问候语
+        document.getElementById('greeting-subtext').textContent = currentUser.greetingSub;
+        document.getElementById('greeting-maintext').textContent = currentUser.greetingMain;
+
+        // 显示对应的会员中心视图
+        Object.values(users).forEach(u => u.view.style.display = 'none');
+        currentUser.view.style.display = 'block';
+    }
+    
+    function openChatbot() {
+        chatbotContainer.classList.add('visible');
+        chatbotTitle.textContent = currentUser.chatbotName;
+        chatMessages.innerHTML = '';
+        addMessage(currentUser.chatbotGreeting, 'bot');
+    }
+
+    function closeChatbot() {
+        chatbotContainer.classList.remove('visible');
+    }
+    
+    chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const userInput = chatInput.value.trim();
+        if(userInput) {
+            addMessage(userInput, 'user');
+            chatInput.value = '';
+            setTimeout(() => generateBotResponse(userInput), 800);
+        }
+    });
+
+    function addMessage(text, sender) {
+        const row = document.createElement('div');
+        row.className = `message-row ${sender}`;
+
+        let messageHtml = '';
+        if (sender === 'bot') {
+            messageHtml = `
+                <div class="avatar">
+                    <img src="https://cdn-icons-png.flaticon.com/512/8943/8943377.png" alt="bot avatar">
+                </div>
+                <div class="message-bubble">${text}</div>
+            `;
+        } else {
+            messageHtml = `<div class="message-bubble">${text}</div>`;
+        }
+        
+        row.innerHTML = messageHtml;
+        chatMessages.appendChild(row);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function generateBotResponse(input) {
+        let response = "抱歉，我还在学习中，不太明白您的问题。";
+        input = input.toLowerCase();
+
+        if (currentUser === users.quality) {
+            if (input.includes('产地') || input.includes('瑰夏')) {
+                response = "我们的瑰夏手冲咖啡豆，来自埃塞俄比亚的瑰夏村，海拔1900-2100米。由当地咖农手工采摘和日晒处理，呈现出迷人的柑橘和茉莉花香气。";
+            } else if (input.includes('蛋糕') || input.includes('赠品')) {
+                response = "是的，作为给您的首购礼，在您首次下单任意饮品时，系统会自动为您在订单中加入一份免费的巴斯克芝士蛋糕哦！";
+            }
+        } else if (currentUser === users.savvy) {
+            if (input.includes('积分') || input.includes('兑换')) {
+                response = "您好！您的12860积分非常划算！除了兑换饮品，还可以在“积分商城”兑换我们的限量周边，比如帆布袋和马克杯。";
+            } else if (input.includes('划算') || input.includes('省钱')) {
+                response = "给您个省钱小贴士：您可以先使用“满40减8”的券购买两杯饮品，这样不仅能满足优惠门槛，还能累积更多积分用于下次兑换哦！";
+            }
+        }
+        addMessage(response, 'bot');
+    }
+    </script>
+</body>
+</html>
